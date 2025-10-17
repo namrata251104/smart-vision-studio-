@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: smart-vision-studio
+    env: docker
+    plan: free
+    region: frankfurt
+    autoDeploy: true
+    rootDir: smart-vision-studio
+    healthCheckPath: /
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: PYTHONDONTWRITEBYTECODE
+        value: "1"
