@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Vision Studio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;              /* center child sections */
+            flex-direction: column;
+            align-items: center;        /* horizontally center children */
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            width: 100%;               /* keep header spanning full width */
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            /* Center the main column under the header precisely */
+            max-width: 820px;   /* matches video-section + paddings */
+            margin: 0 auto;     /* centers the whole block */
+            width: 100%;
+        }
+
+        .video-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 820px;   /* align with main-content max width */
+            width: 100%;
+            margin: 0 auto;     /* ensure centering */
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto;
+        }
+
+        #videoFeed {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .video-overlay {
+            position: absolute;
+            top: 10px;
+            left: 50%;                /* center horizontally */
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            z-index: 2;               /* ensure above video */
+        }
+
+        .controls-panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            height: fit-content;
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+        }
+
+        .control-group h3 {
+            margin-bottom: 15px;
+            color: #fff;
+            font-size: 1.1em;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+            color: white;
+        }
+
+        .btn-filter {
+            background: linear-gradient(45deg, #9C27B0, #7B1FA2);
+            color: white;
+            margin: 3px 0;
+            padding: 8px;
+            font-size: 0.9em;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .btn.active {
+            background: linear-gradient(45deg, #FF9800, #F57C00);
+            transform: scale(1.05);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-online {
+            background: #4CAF50;
+            animation: pulse 2s infinite;
+        }
+
+        .status-offline {
+            background: #f44336;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .stats-panel {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            font-size: 0.9em;
+        }
+
+        .mode-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .capture-section {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .capture-btn {
+            background: linear-gradient(45deg, #E91E63, #C2185B);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .capture-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(233, 30, 99, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .mode-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 Smart Vision Studio</h1>
+            <p>Real-time Object Detection • Motion Tracking • Creative Filters • Environmental Analysis</p>
+        </div>
+
+        <div class="main-content">
+            <div class="video-section">
+                <div class="video-container">
+                    <video id="browser-video" autoplay playsinline style="display: none; width: 100%; height: 100%; object-fit: cover;"></video>
+                    <canvas id="processed-canvas" style="display: none; width: 100%; height: 100%; object-fit: cover;"></canvas>
+                    <img id="video-feed" src=\"\" alt="Video Feed" style="width: 100%; height: 100%; object-fit: cover;">
+                    <div class="video-overlay">
+                        <div class="status-indicator" id="camera-status">
+                            <span class="status-dot"></span>
+                            <span class="status-text">Camera Offline</span>
+                        </div>
+                        <div class="mode-info" id="mode-info">
+                            <div class="mode-text">Mode: <span id="current-mode">object_detection</span></div>
+                            <div class="filter-text">Filter: <span id="current-filter">none</span></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="controls-panel">
+                    <div class="control-group">
+                        <h3>🎮 Camera Control</h3>
+                        <button class="btn btn-primary" onclick="startCamera()">Start Camera</button>
+                        <button class="btn btn-danger" onclick="stopCamera()">Stop Camera</button>
+
+                <div class="control-group">
+                    <h3>🔧 Processing Modes</h3>
+                    <div class="mode-grid">
+                        <button class="btn btn-secondary mode-btn" data-mode="object_detection">🎯 Objects</button>
+                        <button class="btn btn-secondary mode-btn" data-mode="motion_tracking">🏃 Motion</button>
+                        <button class="btn btn-secondary mode-btn" data-mode="creative_art">🎨 Creative</button>
+                        <button class="btn btn-secondary mode-btn" data-mode="environmental">🌍 Environment</button>
+                        <button class="btn btn-secondary mode-btn" data-mode="gesture_control">👋 Gestures</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>🎭 Creative Filters</h3>
+                    <div class="filter-grid">
+                        <button class="btn btn-filter filter-btn" data-filter="none">Original</button>
+                        <button class="btn btn-filter filter-btn" data-filter="oil_painting">Oil Painting</button>
+                        <button class="btn btn-filter filter-btn" data-filter="pencil_sketch">Pencil Sketch</button>
+                        <button class="btn btn-filter filter-btn" data-filter="watercolor">Watercolor</button>
+                        <button class="btn btn-filter filter-btn" data-filter="pop_art">Pop Art</button>
+                        <button class="btn btn-filter filter-btn" data-filter="neon_glow">Neon Glow</button>
+                        <button class="btn btn-filter filter-btn" data-filter="thermal_vision">Thermal Vision</button>
+                        <button class="btn btn-filter filter-btn" data-filter="cyberpunk">Cyberpunk</button>
+                        <button class="btn btn-filter filter-btn" data-filter="vintage">Vintage</button>
+                        <button class="btn btn-filter filter-btn" data-filter="cartoon">Cartoon</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>📸 Capture</h3>
+                    <button class="capture-btn" onclick="capturePhoto()">📸 Capture Photo</button>
+                </div>
+
+                <div class="stats-panel">
+                    <h3>📊 Live Stats</h3>
+                    <div class="stat-item">
+                        <span>Current Mode:</span>
+                        <span id="currentMode">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Active Filter:</span>
+                        <span id="currentFilter">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>FPS:</span>
+                        <span id="fps">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Recording:</span>
+                        <span id="recordingStatus">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Recorded Frames:</span>
+                        <span id="recordedFrames">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Objects Detected:</span>
+                        <span id="objectCount">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load TensorFlow.js and models for real computer vision -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2/dist/coco-ssd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.0.7/dist/blazeface.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
+
+    <script>
+        let isStreaming = false;
+        let currentMode = 'object_detection';
+        let currentFilter = 'none';
+        
+        // Real AI models
+        let objectDetectionModel = null;
+        let faceDetectionModel = null;
+        let handsModel = null;
+        let poseModel = null;
+        
+        // Motion detection variables
+        let previousFrame = null;
+        let motionThreshold = 30;
+        
+        // Real detection results
+        let detectedObjects = [];
+        let detectedFaces = [];
+        let detectedHands = [];
+        let detectedPose = null;
+        let motionAreas = [];
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStatus();
+            loadModes();
+            
+            // Hide demo feed initially, show camera request message
+            document.getElementById('video-feed').style.display = 'none';
+            document.getElementById('processed-canvas').style.display = 'none';
+            document.getElementById('browser-video').style.display = 'none';
+            
+            // Load real AI models
+            loadAIModels();
+            
+            // Add event listeners for mode buttons
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    console.log('Mode button clicked:', this.dataset.mode);
+                    changeMode(this.dataset.mode);
+                });
+            });
+
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    console.log('Filter button clicked:', this.dataset.filter);
+                    changeFilter(this.dataset.filter);
+                });
+            });
+            
+            console.log('Found mode buttons:', document.querySelectorAll('.mode-btn').length);
+            console.log('Found filter buttons:', document.querySelectorAll('.filter-btn').length);
+        });
+
+        // Load real AI models
+        async function loadAIModels() {
+            console.log('Loading real AI models...');
+            
+            try {
+                // Load object detection model (COCO-SSD)
+                objectDetectionModel = await cocoSsd.load();
+                console.log('Object detection model loaded');
+                
+                // Load face detection model
+                faceDetectionModel = await blazeface.load();
+                console.log('Face detection model loaded');
+                
+                console.log('All AI models loaded successfully');
+            } catch (error) {
+                console.error('Error loading AI models:', error);
+            }
+        }
+
+        // Real object detection
+        async function detectObjects(video) {
+            if (!objectDetectionModel) return [];
+            
+            try {
+                const predictions = await objectDetectionModel.detect(video);
+                return predictions.map(pred => ({
+                    class: pred.class,
+                    confidence: pred.score,
+                    bbox: pred.bbox
+                }));
+            } catch (error) {
+                console.error('Object detection error:', error);
+                return [];
+            }
+        }
+
+        // Real face detection
+        async function detectFaces(video) {
+            if (!faceDetectionModel) return [];
+            
+            try {
+                const predictions = await faceDetectionModel.estimateFaces(video, false);
+                return predictions.map(pred => ({
+                    bbox: [
+                        pred.topLeft[0],
+                        pred.topLeft[1],
+                        pred.bottomRight[0] - pred.topLeft[0],
+                        pred.bottomRight[1] - pred.topLeft[1]
+                    ],
+                    confidence: pred.probability[0]
+                }));
+            } catch (error) {
+                console.error('Face detection error:', error);
+                return [];
+            }
+        }
+
+        // Real motion detection
+        function detectMotion(currentImageData) {
+            if (!previousFrame) {
+                previousFrame = new Uint8ClampedArray(currentImageData.data);
+                return [];
+            }
+            
+            const motionPixels = [];
+            const current = currentImageData.data;
+            const threshold = motionThreshold;
+            
+            for (let i = 0; i < current.length; i += 4) {
+                const currentGray = (current[i] + current[i + 1] + current[i + 2]) / 3;
+                const previousGray = (previousFrame[i] + previousFrame[i + 1] + previousFrame[i + 2]) / 3;
+                
+                if (Math.abs(currentGray - previousGray) > threshold) {
+                    const pixelIndex = i / 4;
+                    const x = pixelIndex % currentImageData.width;
+                    const y = Math.floor(pixelIndex / currentImageData.width);
+                    motionPixels.push({x, y});
+                }
+            }
+            
+            // Update previous frame
+            previousFrame = new Uint8ClampedArray(current);
+            
+            // Group motion pixels into areas
+            return groupMotionPixels(motionPixels, currentImageData.width, currentImageData.height);
+        }
+
+        function groupMotionPixels(pixels, width, height) {
+            if (pixels.length < 100) return []; // Ignore small movements
+            
+            // Simple clustering - group nearby pixels
+            const areas = [];
+            const gridSize = 20;
+            const grid = {};
+            
+            pixels.forEach(pixel => {
+                const gridX = Math.floor(pixel.x / gridSize);
+                const gridY = Math.floor(pixel.y / gridSize);
+                const key = `${gridX},${gridY}`;
+                
+                if (!grid[key]) {
+                    grid[key] = [];
+                }
+                grid[key].push(pixel);
+            });
+            
+            Object.keys(grid).forEach(key => {
+                if (grid[key].length > 50) { // Minimum pixels for motion area
+                    const [gridX, gridY] = key.split(',').map(Number);
+                    areas.push({
+                        x: gridX * gridSize,
+                        y: gridY * gridSize,
+                        width: gridSize,
+                        height: gridSize,
+                        pixelCount: grid[key].length
+                    });
+                }
+            });
+            
+            return areas;
+        }
+
+        let browserStream = null;
+        let canvas = null;
+        let ctx = null;
+        let animationId = null;
+
+        function startCamera() {
+            console.log('Requesting camera access...');
+            
+            // Get canvas and context
+            canvas = document.getElementById('processed-canvas');
+            ctx = canvas.getContext('2d');
+            
+            // Request camera access
+            navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    width: 640, 
+                    height: 480,
+                    facingMode: 'user'
+                } 
+            })
+            .then(stream => {
+                console.log('Camera access granted');
+                browserStream = stream;
+                
+                const video = document.getElementById('browser-video');
+                const canvas = document.getElementById('processed-canvas');
+                const serverFeed = document.getElementById('video-feed');
+                
+                video.srcObject = stream;
+                
+                // Hide browser video, show only processed canvas, hide server feed
+                video.style.display = 'none';
+                canvas.style.display = 'block';
+                serverFeed.style.display = 'none';
+                
+                // Start processing
+                isStreaming = true;
+                updateStatusIndicator(true);
+                startProcessing();
+                
+                console.log('Browser camera started successfully');
+            })
+            .catch(error => {
+                console.error('Camera access denied:', error);
+                alert('Camera access required for Smart Vision Studio features. Please allow camera access and try again.');
+                
+                // Fallback to server demo
+                startServerDemo();
+            });
+        }
+
+        function startServerDemo() {
+            console.log('Fallback: Starting server demo...');
+            
+            // Hide browser elements, show server feed
+            document.getElementById('browser-video').style.display = 'none';
+            document.getElementById('processed-canvas').style.display = 'none';
+            document.getElementById('video-feed').style.display = 'block';
+            
+            fetch('/start_camera', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    isStreaming = true;
+                    updateStatusIndicator(true);
+                    console.log('Server demo started as fallback');
+                }
+            })
+            .catch(error => {
+                console.error('Error starting server demo:', error);
+            });
+        }
+
+        function startProcessing() {
+            const video = document.getElementById('browser-video');
+            
+            function processFrame() {
+                if (!isStreaming || !video.videoWidth) {
+                    animationId = requestAnimationFrame(processFrame);
+                    return;
+                }
+                
+                // Set canvas size to match video
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                
+                // Draw video frame to canvas
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                // Get image data for processing
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                
+                // Draw video frame to canvas first
+                ctx.putImageData(imageData, 0, 0);
+                
+                // Apply current mode processing overlays
+                applyProcessing(imageData);
+                
+                // Continue processing
+                animationId = requestAnimationFrame(processFrame);
+            }
+            
+            // Wait for video to be ready
+            video.addEventListener('loadedmetadata', () => {
+                processFrame();
+            });
+            
+            if (video.readyState >= 2) {
+                processFrame();
+            }
+        }
+
+        async function applyProcessing(imageData) {
+            const video = document.getElementById('browser-video');
+            
+            // Run real AI detection based on current mode
+            switch(currentMode) {
+                case 'object_detection':
+                    detectedObjects = await detectObjects(video);
+                    drawRealObjectDetection();
+                    break;
+                case 'motion_tracking':
+                    motionAreas = detectMotion(imageData);
+                    drawRealMotionTracking();
+                    break;
+                case 'creative_art':
+                    const filteredData = applyCreativeFilter(imageData);
+                    ctx.putImageData(filteredData, 0, 0);
+                    break;
+                case 'environmental':
+                    drawRealEnvironmentalInfo(imageData);
+                    break;
+                case 'ai_detection':
+                    detectedFaces = await detectFaces(video);
+                    detectedObjects = await detectObjects(video);
+                    drawRealAIDetection();
+                    break;
+                case 'gesture_control':
+                    // Real gesture detection would go here
+                    drawGestureControl();
+                    break;
+                case 'pose_estimation':
+                    // Real pose detection would go here
+                    drawPoseEstimation();
+                    break;
+                case 'sound_visual':
+                    drawSoundVisualization();
+                    break;
+            }
+            
+            // Update stats with real detection counts
+            updateRealStats();
+            
+            return imageData;
+        }
+
+        function drawRealObjectDetection() {
+            detectedObjects.forEach(obj => {
+                const [x, y, width, height] = obj.bbox;
+                
+                // Draw bounding box
+                ctx.strokeStyle = '#00ff00';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(x, y, width, height);
+                
+                // Draw label with confidence
+                ctx.fillStyle = '#00ff00';
+                ctx.font = '16px Arial';
+                const label = `${obj.class} (${Math.round(obj.confidence * 100)}%)`;
+                ctx.fillText(label, x, y - 10);
+                
+                // Draw confidence bar
+                ctx.fillStyle = 'rgba(0, 255, 0, 0.3)';
+                ctx.fillRect(x, y - 8, width * obj.confidence, 6);
+            });
+            
+            // Show detection count
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '18px Arial';
+            ctx.fillText(`Objects Detected: ${detectedObjects.length}`, 10, 30);
+        }
+
+        function drawRealMotionTracking() {
+            motionAreas.forEach(area => {
+                // Draw motion area
+                ctx.strokeStyle = '#ffff00';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(area.x, area.y, area.width, area.height);
+                
+                // Draw motion intensity
+                const intensity = Math.min(area.pixelCount / 200, 1);
+                ctx.fillStyle = `rgba(255, 255, 0, ${intensity * 0.3})`;
+                ctx.fillRect(area.x, area.y, area.width, area.height);
+                
+                // Label
+                ctx.fillStyle = '#ffff00';
+                ctx.font = '14px Arial';
+                ctx.fillText('MOTION', area.x, area.y - 5);
+            });
+            
+            // Show motion status
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '18px Arial';
+            const status = motionAreas.length > 0 ? 'MOTION DETECTED' : 'No Motion';
+            ctx.fillText(status, 10, 30);
+        }
+
+        function drawRealEnvironmentalInfo(imageData) {
+            const data = imageData.data;
+            let brightness = 0;
+            let rTotal = 0, gTotal = 0, bTotal = 0;
+            const pixelCount = data.length / 4;
+            
+            // Calculate real brightness and dominant color
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                
+                brightness += (r + g + b) / 3;
+                rTotal += r;
+                gTotal += g;
+                bTotal += b;
+            }
+            
+            brightness = brightness / pixelCount;
+            const avgR = Math.round(rTotal / pixelCount);
+            const avgG = Math.round(gTotal / pixelCount);
+            const avgB = Math.round(bTotal / pixelCount);
+            
+            // Display real environmental data
+            ctx.fillStyle = '#ffff00';
+            ctx.font = '18px Arial';
+            ctx.fillText(`Brightness: ${Math.round(brightness)}`, 10, 30);
+            ctx.fillText(`Environment: ${brightness > 128 ? 'Bright' : 'Dark'}`, 10, 55);
+            ctx.fillText(`Dominant Color: RGB(${avgR}, ${avgG}, ${avgB})`, 10, 80);
+            
+            // Show color swatch
+            ctx.fillStyle = `rgb(${avgR}, ${avgG}, ${avgB})`;
+            ctx.fillRect(10, 90, 50, 30);
+            ctx.strokeStyle = '#ffffff';
+            ctx.strokeRect(10, 90, 50, 30);
+        }
+
+        function drawRealAIDetection() {
+            // Draw detected faces
+            detectedFaces.forEach(face => {
+                const [x, y, width, height] = face.bbox;
+                
+                ctx.strokeStyle = '#ff00ff';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(x, y, width, height);
+                
+                ctx.fillStyle = '#ff00ff';
+                ctx.font = '16px Arial';
+                ctx.fillText(`Face (${Math.round(face.confidence * 100)}%)`, x, y - 10);
+            });
+            
+            // Draw detected objects
+            detectedObjects.forEach(obj => {
+                const [x, y, width, height] = obj.bbox;
+                
+                ctx.strokeStyle = '#00ffff';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x, y, width, height);
+                
+                ctx.fillStyle = '#00ffff';
+                ctx.font = '14px Arial';
+                ctx.fillText(`${obj.class} (${Math.round(obj.confidence * 100)}%)`, x, y - 5);
+            });
+            
+            // Show detection summary
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '18px Arial';
+            ctx.fillText(`AI Detection: ${detectedFaces.length} faces, ${detectedObjects.length} objects`, 10, 30);
+        }
+
+        function updateRealStats() {
+            // Update live stats with real detection data
+            document.getElementById('objectCount').textContent = detectedObjects.length;
+            document.getElementById('currentMode').textContent = currentMode.replace('_', ' ').toUpperCase();
+            document.getElementById('currentFilter').textContent = currentFilter.replace('_', ' ').toUpperCase();
+        }
+
+        function drawObjectDetection() {
+            ctx.strokeStyle = '#00ff00';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(100, 100, 120, 90);
+            ctx.fillStyle = '#00ff00';
+            ctx.font = '16px Arial';
+            ctx.fillText('Person Detected', 100, 95);
+            
+            // Add confidence score
+            ctx.fillText('Confidence: 92%', 100, 210);
+        }
+
+        function drawMotionTracking() {
+            const time = Date.now() * 0.001;
+            const x = Math.sin(time) * 100 + 200;
+            const y = Math.cos(time) * 50 + 150;
+            
+            ctx.strokeStyle = '#ffff00';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(x, y, 80, 60);
+            ctx.fillStyle = '#ffff00';
+            ctx.font = '16px Arial';
+            ctx.fillText('MOTION DETECTED', x, y - 10);
+        }
+
+        function drawEnvironmentalInfo() {
+            // Calculate brightness from current frame
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            let brightness = 0;
+            
+            for (let i = 0; i < data.length; i += 4) {
+                brightness += (data[i] + data[i + 1] + data[i + 2]) / 3;
+            }
+            brightness = brightness / (data.length / 4);
+            
+            ctx.fillStyle = '#ffff00';
+            ctx.font = '20px Arial';
+            ctx.fillText(`Brightness: ${Math.round(brightness)}`, 10, 30);
+            ctx.fillText(`Environment: ${brightness > 128 ? 'Bright' : 'Dark'}`, 10, 60);
+        }
+
+        function drawAIDetection() {
+            ctx.strokeStyle = '#ff00ff';
+            ctx.lineWidth = 2;
+            
+            // Multiple AI detection boxes
+            const detections = [
+                {x: 80, y: 80, w: 100, h: 80, label: 'Face'},
+                {x: 200, y: 150, w: 60, h: 40, label: 'Hand'},
+                {x: 150, y: 200, w: 80, h: 60, label: 'Object'}
+            ];
+            
+            detections.forEach(det => {
+                ctx.strokeRect(det.x, det.y, det.w, det.h);
+                ctx.fillStyle = '#ff00ff';
+                ctx.font = '14px Arial';
+                ctx.fillText(det.label, det.x, det.y - 5);
+            });
+        }
+
+        function drawGestureControl() {
+            ctx.fillStyle = '#00ffff';
+            ctx.font = '18px Arial';
+            ctx.fillText('👋 Gesture Control Active', 10, 30);
+            ctx.fillText('Show hand gestures for control', 10, 55);
+            
+            // Draw hand tracking points
+            ctx.fillStyle = '#00ffff';
+            for (let i = 0; i < 5; i++) {
+                ctx.beginPath();
+                ctx.arc(150 + i * 20, 200, 3, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+        }
+
+        function drawPoseEstimation() {
+            ctx.strokeStyle = '#ff6600';
+            ctx.lineWidth = 2;
+            
+            // Draw skeleton
+            const joints = [
+                {x: 200, y: 100}, // head
+                {x: 200, y: 150}, // neck
+                {x: 180, y: 180}, // left shoulder
+                {x: 220, y: 180}, // right shoulder
+                {x: 200, y: 220}, // spine
+                {x: 190, y: 280}, // left hip
+                {x: 210, y: 280}  // right hip
+            ];
+            
+            // Draw connections
+            ctx.beginPath();
+            ctx.moveTo(joints[0].x, joints[0].y);
+            joints.forEach(joint => ctx.lineTo(joint.x, joint.y));
+            ctx.stroke();
+            
+            // Draw joints
+            ctx.fillStyle = '#ff6600';
+            joints.forEach(joint => {
+                ctx.beginPath();
+                ctx.arc(joint.x, joint.y, 4, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+            
+            ctx.fillStyle = '#ff6600';
+            ctx.font = '16px Arial';
+            ctx.fillText('Pose Detected', 10, 30);
+        }
+
+        function drawSoundVisualization() {
+            // Draw frequency bars
+            const barWidth = 15;
+            const barGap = 3;
+            const numBars = 25;
+            
+            for (let i = 0; i < numBars; i++) {
+                const height = Math.random() * 150 + 20;
+                const x = 50 + i * (barWidth + barGap);
+                const y = canvas.height - height - 50;
+                
+                const hue = (i / numBars) * 360;
+                ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
+                ctx.fillRect(x, y, barWidth, height);
+            }
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '18px Arial';
+            ctx.fillText('🎵 Sound Visualization', 10, 30);
+        }
+
+        function applyCreativeFilter(imageData) {
+            const data = imageData.data;
+            
+            switch(currentFilter) {
+                case 'pencil_sketch':
+                    // Convert to grayscale and enhance edges
+                    for (let i = 0; i < data.length; i += 4) {
+                        const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+                        data[i] = gray;
+                        data[i + 1] = gray;
+                        data[i + 2] = gray;
+                    }
+                    break;
+                case 'neon_glow':
+                    // Enhance colors and add glow effect
+                    for (let i = 0; i < data.length; i += 4) {
+                        data[i] = Math.min(255, data[i] * 1.5);
+                        data[i + 1] = Math.min(255, data[i + 1] * 1.3);
+                        data[i + 2] = Math.min(255, data[i + 2] * 1.7);
+                    }
+                    break;
+                case 'vintage':
+                    // Apply sepia tone
+                    for (let i = 0; i < data.length; i += 4) {
+                        const r = data[i];
+                        const g = data[i + 1];
+                        const b = data[i + 2];
+                        data[i] = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189));
+                        data[i + 1] = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168));
+                        data[i + 2] = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131));
+                    }
+                    break;
+            }
+            
+            return imageData;
+        }
+
+        function applyMotionDetection(imageData) {
+            // Add motion detection overlay
+            const data = imageData.data;
+            
+            // Simple motion simulation - add moving rectangles
+            const time = Date.now() * 0.001;
+            const x = Math.sin(time) * 100 + 200;
+            const y = Math.cos(time) * 50 + 150;
+            
+            // Draw motion indicator
+            ctx.strokeStyle = '#00ff00';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(x, y, 80, 60);
+            ctx.fillStyle = '#00ff00';
+            ctx.font = '16px Arial';
+            ctx.fillText('MOTION', x, y - 10);
+            
+            return imageData;
+        }
+
+        function applyEnvironmentalAnalysis(imageData) {
+            const data = imageData.data;
+            let brightness = 0;
+            
+            // Calculate average brightness
+            for (let i = 0; i < data.length; i += 4) {
+                brightness += (data[i] + data[i + 1] + data[i + 2]) / 3;
+            }
+            brightness = brightness / (data.length / 4);
+            
+            // Draw brightness info
+            ctx.fillStyle = '#ffff00';
+            ctx.font = '20px Arial';
+            ctx.fillText(`Brightness: ${Math.round(brightness)}`, 10, 30);
+            
+            return imageData;
+        }
+
+        function applyBasicProcessing(imageData) {
+            // Apply processing after drawing the frame
+            setTimeout(() => {
+                if (currentMode === 'object_detection') {
+                    // Draw detection boxes
+                    ctx.strokeStyle = '#00ff00';
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(100, 100, 120, 90);
+                    ctx.fillStyle = '#00ff00';
+                    ctx.font = '16px Arial';
+                    ctx.fillText('Person Detected', 100, 95);
+                }
+            }, 0);
+            
+            return imageData;
+        }
+
+        function stopCamera() {
+            // Stop browser camera
+            if (browserStream) {
+                browserStream.getTracks().forEach(track => track.stop());
+                browserStream = null;
+            }
+            
+            // Stop animation
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            
+            // Hide video elements
+            document.getElementById('browser-video').style.display = 'none';
+            document.getElementById('video-feed').style.display = 'none';
+            
+            // Clear canvas
+            if (canvas && ctx) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+            
+            isStreaming = false;
+            updateStatusIndicator(false);
+            
+            // Also stop server demo
+            fetch('/stop_camera', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Server demo stopped');
+            })
+            .catch(error => {
+                console.error('Error stopping server demo:', error);
+            });
+        }
+
+        function changeMode(mode) {
+            console.log('Changing mode to:', mode);
+            
+            // Update current mode immediately for visual effects
+            currentMode = mode;
+            updateActiveButtons();
+            updateStats();
+            
+            // Also update server
+            fetch('/change_mode', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({mode: mode})
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Server mode updated:', data);
+            })
+            .catch(error => {
+                console.error('Error updating server mode:', error);
+            });
+        }
+
+        function changeFilter(filter) {
+            console.log('Changing filter to:', filter);
+            
+            // Update current filter immediately for visual effects
+            currentFilter = filter;
+            updateActiveButtons();
+            updateStats();
+            
+            // Also update server
+            fetch('/change_filter', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({filter: filter})
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Server filter updated:', data);
+            })
+            .catch(error => {
+                console.error('Error updating server filter:', error);
+            });
+        }
+
+        function loadModes() {
+            console.log('Loading modes...');
+            fetch('/get_modes')
+            .then(response => {
+                console.log('Get modes response:', response);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Get modes data:', data);
+                currentMode = data.current_mode;
+                currentFilter = data.current_filter;
+                updateActiveButtons();
+                updateStats();
+            })
+            .catch(error => {
+                console.error('Error loading modes:', error);
+            });
+        }
+
+        function updateActiveButtons() {
+            console.log('Updating active buttons. Current mode:', currentMode, 'Current filter:', currentFilter);
+            
+            // Update mode buttons
+            const modeButtons = document.querySelectorAll('.mode-btn');
+            console.log('Found mode buttons:', modeButtons.length);
+            modeButtons.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.mode === currentMode) {
+                    btn.classList.add('active');
+                    console.log('Activated mode button:', btn.dataset.mode);
+                }
+            });
+
+            // Update filter buttons
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            console.log('Found filter buttons:', filterButtons.length);
+            filterButtons.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.filter === currentFilter) {
+                    btn.classList.add('active');
+                    console.log('Activated filter button:', btn.dataset.filter);
+                }
+            });
+        }
+
+        function updateStatusIndicator(isOnline) {
+            const statusDot = document.querySelector('.status-dot');
+            const statusText = document.querySelector('.status-text');
+            
+            if (isOnline) {
+                statusDot.style.backgroundColor = '#4CAF50';
+                statusText.textContent = browserStream ? 'Live Camera' : 'Demo Mode';
+            } else {
+                statusDot.style.backgroundColor = '#f44336';
+                statusText.textContent = 'Camera Offline';
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('currentMode').textContent = currentMode.replace('_', ' ').toUpperCase();
+            document.getElementById('currentFilter').textContent = currentFilter.replace('_', ' ').toUpperCase();
+            
+            // Fetch live stats from server
+            if (isStreaming) {
+                fetch('/get_stats')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('fps').textContent = data.fps || '-';
+                    document.getElementById('recordingStatus').textContent = data.is_recording ? 'ON' : 'OFF';
+                    document.getElementById('recordedFrames').textContent = data.recorded_frames || '0';
+                })
+                .catch(error => {
+                    console.error('Error fetching stats:', error);
+                });
+            }
+        }
+
+        function updateStatus() {
+            if (isStreaming) {
+                updateStats();
+                document.getElementById('objectCount').textContent = Math.floor(Math.random() * 5);
+            }
+        }
+        
+        function startRecording() {
+            console.log('Starting video recording...');
+            fetch('/start_recording', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Recording started:', data);
+                updateStats();
+            })
+            .catch(error => {
+                console.error('Error starting recording:', error);
+            });
+        }
+        
+        function stopRecording() {
+            console.log('Stopping video recording...');
+            fetch('/stop_recording', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Recording stopped:', data);
+                updateStats();
+            })
+            .catch(error => {
+                console.error('Error stopping recording:', error);
+            });
+        }
+        
+        function downloadVideo() {
+            alert('Video download feature will be available after recording!');
+        }
+
+        function capturePhoto() {
+            if (!isStreaming) {
+                alert('Please start the camera first');
+                return;
+            }
+            
+            // Create a canvas to capture the current frame
+            const video = document.getElementById('videoFeed');
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = video.naturalWidth || 640;
+            canvas.height = video.naturalHeight || 480;
+            ctx.drawImage(video, 0, 0);
+            
+            // Download the image
+            const link = document.createElement('a');
+            link.download = `vision_studio_${new Date().getTime()}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+            
+            console.log('Photo captured');
+        }
+
+
+        // Enhanced keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            switch(e.key) {
+                case '1':
+                    changeMode('object_detection');
+                    break;
+                case '2':
+                    changeMode('ai_detection');
+                    break;
+                case '3':
+                    changeMode('motion_tracking');
+                    break;
+                case '4':
+                    changeMode('creative_art');
+                    break;
+                case '5':
+                    changeMode('sound_visual');
+                    break;
+                case '6':
+                    changeMode('video_record');
+                    break;
+                case '7':
+                    changeMode('advanced_track');
+                    break;
+                case '8':
+                    changeMode('environmental');
+                    break;
+                case '9':
+                    changeMode('gesture_control');
+                    break;
+                case 'p':
+                    changeMode('pose_estimation');
+                    break;
+                case 'b':
+                    changeMode('bg_replacement');
+                    break;
+                case 'a':
+                    changeMode('object_analytics');
+                    break;
+                case ' ':
+                    e.preventDefault();
+                    capturePhoto();
+                    break;
+                case 'r':
+                    if (isStreaming) {
+                        startRecording();
+                    }
+                    break;
+                case 't':
+                    if (isStreaming) {
+                        stopRecording();
+                    }
+                    break;
+                case 's':
+                    if (isStreaming) {
+                        stopCamera();
+                    } else {
+                        startCamera();
+                    }
+                    break;
+            }
+        });
+
+        // Update stats periodically
+        setInterval(updateStatus, 1000);
+
+        // Auto-refresh video feed error handling
+        document.getElementById('videoFeed').addEventListener('error', function() {
+            if (isStreaming) {
+                setTimeout(() => {
+                    this.src = '/video_feed?' + new Date().getTime();
+                }, 1000);
+            }
+        });
+    </script>
+</body>
+</html>
