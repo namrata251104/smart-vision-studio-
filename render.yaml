@@ -3,7 +3,6 @@ services:
     name: smart-vision-studio
     env: docker
     plan: free
-    region: frankfurt
     autoDeploy: true
     rootDir: smart-vision-studio
     healthCheckPath: /
